@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from importlib import import_module
 
@@ -30,19 +31,34 @@ def make_readme(name, repo):
 
 .. end-badges
 '''.format(name=name, repo=repo))
-        for mod in _get_modules():
-            f.write(mod.__doc__)
+
+        for doc in _get_modules():
+            f.write(doc)
             f.write('')
 
 
 def make_long_description():
-    return '\n'.join((mod.__doc__ for mod in _get_modules()))
+    return '\n'.join((doc for doc in _get_modules()))
 
 
 def _get_modules():
-    folders = (f.name for f in os.scandir(_SRC) if f.is_dir() and 'egg-info' not in f.name)
-    for mod in (import_module('src.' + folder) for folder in folders):
-        yield mod
+    _, folders, _ = next(os.walk(_SRC))
+    for folder in folders:
+        if 'egg-info' in folder:
+            continue
+        rv = get_module_string(folder)
+        if rv:
+            yield rv
+
+
+def get_module_string(name):
+    init = os.path.join(_SRC, name, '__init__.py')
+    try:
+        with open(init, mode='r', encoding='utf-8') as f:
+            data = f.read()
+        return re.search('\A"""(.*)"""', data, flags=re.S | re.M).group(1)
+    except:
+        return None
 
 
 def _get_setup():
