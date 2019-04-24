@@ -3,9 +3,7 @@
 
 # Note: To use the 'upload' functionality of this file, you must:
 #   $ pip install twine
-import io
 import os
-import re
 import sys
 from shutil import rmtree
 from os.path import basename
